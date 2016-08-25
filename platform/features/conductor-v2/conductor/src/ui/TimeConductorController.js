@@ -26,7 +26,7 @@ define(
     ],
     function (TimeConductorValidation) {
 
-        function TimeConductorController($scope, timeConductor, conductorViewService, timeSystems) {
+        function TimeConductorController($scope, $window, timeConductor, conductorViewService, timeSystems) {
 
             var self = this;
 
@@ -38,6 +38,7 @@ define(
             });
 
             this.$scope = $scope;
+            this.$window = $window;
             this.conductorViewService = conductorViewService;
             this.conductor = timeConductor;
             this.modes = conductorViewService.availableModes();
@@ -113,7 +114,7 @@ define(
             this.$scope.boundsModel.end = bounds.end;
             if (!this.pendingUpdate) {
                 this.pendingUpdate = true;
-                requestAnimationFrame(function () {
+                this.$window.requestAnimationFrame(function () {
                     this.pendingUpdate = false;
                     this.$scope.$digest();
                 }.bind(this));
@@ -136,16 +137,8 @@ define(
          * @private
          */
         TimeConductorController.prototype.setFormFromDeltas = function (deltas) {
-            /*
-             * If the selected mode defines deltas, set them in the form
-             */
-            if (deltas !== undefined) {
-                this.$scope.boundsModel.startDelta = deltas.start;
-                this.$scope.boundsModel.endDelta = deltas.end;
-            } else {
-                this.$scope.boundsModel.startDelta = 0;
-                this.$scope.boundsModel.endDelta = 0;
-            }
+            this.$scope.boundsModel.startDelta = deltas.start;
+            this.$scope.boundsModel.endDelta = deltas.end;
         };
 
         /**
@@ -180,7 +173,7 @@ define(
             var deltas = {
                 start: boundsFormModel.startDelta,
                 end: boundsFormModel.endDelta
-            }
+            };
             if (this.validation.validateStartDelta(deltas.start) && this.validation.validateEndDelta(deltas.end)) {
                 //Sychronize deltas between form and mode
                 this.conductorViewService.deltas(deltas);
@@ -226,7 +219,12 @@ define(
          */
         TimeConductorController.prototype.changeTimeSystem = function (newTimeSystem) {
             if (newTimeSystem && (newTimeSystem !== this.$scope.timeSystemModel.selected)) {
-                this.setFormFromDeltas((newTimeSystem.defaults() || {}).deltas);
+                if (newTimeSystem.defaults() && newTimeSystem.defaults().deltas) {
+                    this.setFormFromDeltas(newTimeSystem.defaults().deltas);
+                } else {
+                    //If deltas are not defined in this time system, reset the values in the form
+                    this.setFormFromDeltas({start: 0, end: 0});
+                }
                 this.setFormFromTimeSystem(newTimeSystem);
             }
         };
