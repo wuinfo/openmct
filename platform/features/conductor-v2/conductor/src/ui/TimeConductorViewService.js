@@ -122,13 +122,14 @@ define(
                 if (this._mode) {
                     this._mode.destroy();
                 }
+                this._mode = new TimeConductorMode(modeMetaData, this._conductor, this._timeSystems);
 
                 function contains(timeSystems, timeSystem) {
                     return timeSystems.find(function (t) {
                             return t.metadata.key === timeSystem.metadata.key;
                         }) !== undefined;
                 }
-                this._mode = new TimeConductorMode(modeMetaData, this._conductor, this._timeSystems);
+
                 if (!timeSystem || !contains(this._mode.availableTimeSystems(), timeSystem)) {
                     timeSystem = this._mode.availableTimeSystems()[0];
                     this._conductor.timeSystem(timeSystem, timeSystem.defaults().bounds);

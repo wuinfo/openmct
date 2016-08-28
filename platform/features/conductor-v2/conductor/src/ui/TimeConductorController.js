@@ -197,6 +197,8 @@ define(
         };
 
         /**
+         * Respond to time system selection from UI
+         *
          * Allows time system to be changed by key. This supports selection
          * from the menu. Resolves a TimeSystem object and then invokes
          * TimeConductorController#setTimeSystem
@@ -204,13 +206,15 @@ define(
          * @see TimeConductorController#setTimeSystem
          */
         TimeConductorController.prototype.selectTimeSystemByKey = function(key){
-            var selected = this.timeSystems.find(function (timeSystem){
+            var selected = this.timeSystems.filter(function (timeSystem){
                 return timeSystem.metadata.key === key;
-            });
+            })[0];
             this.conductor.timeSystem(selected, selected.defaults().bounds);
         };
         
         /**
+         * Handles time system change from time conductor
+         *
          * Sets the selected time system. Will populate form with the default
          * bounds and deltas defined in the selected time system.
          *
@@ -219,11 +223,12 @@ define(
          */
         TimeConductorController.prototype.changeTimeSystem = function (newTimeSystem) {
             if (newTimeSystem && (newTimeSystem !== this.$scope.timeSystemModel.selected)) {
-                if (newTimeSystem.defaults() && newTimeSystem.defaults().deltas) {
-                    this.setFormFromDeltas(newTimeSystem.defaults().deltas);
-                } else {
-                    //If deltas are not defined in this time system, reset the values in the form
-                    this.setFormFromDeltas({start: 0, end: 0});
+                if (newTimeSystem.defaults()){
+                    var deltas = newTimeSystem.defaults().deltas || {start: 0, end: 0};
+                    var bounds = newTimeSystem.defaults().bounds || {start: 0, end: 0};
+
+                    this.setFormFromDeltas(deltas);
+                    this.setFormFromBounds(bounds);
                 }
                 this.setFormFromTimeSystem(newTimeSystem);
             }
